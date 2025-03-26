@@ -1,9 +1,9 @@
 package com.stroll.www.vo;
 
 public class ImageVO {
-	int no;
-	String imagePath;
-	int placeNo;
+	private int no;
+	private String imagePath;
+	private int placeNo;
 	public int getNo() {
 		return no;
 	}

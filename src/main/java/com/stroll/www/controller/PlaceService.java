@@ -20,11 +20,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.stroll.www.apikey.ApiKey;
 import com.stroll.www.dao.ImageDAO;
 import com.stroll.www.dao.PlaceDAO;
+import com.stroll.www.property.ApiKey;
+import com.stroll.www.property.AwsProps;
 import com.stroll.www.vo.ImageVO;
 import com.stroll.www.vo.PlaceVO;
+
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 @Service
 public class PlaceService {
@@ -33,6 +41,12 @@ public class PlaceService {
 	@Autowired
 	private ImageDAO imageDao; 
 	private final static int PAGE_SIZE = 10;
+	
+	private S3Client s3Client = S3Client.builder()		//S3 연결(인증)
+            .region(Region.AP_NORTHEAST_2)
+            .credentialsProvider(StaticCredentialsProvider.create(
+                    AwsBasicCredentials.create(AwsProps.s3AccessKeyId, AwsProps.s3SecretAccessKey)))
+            .build();
 
 	public PlaceVO getPlace(PlaceVO vo) {
 		vo = dao.getPlace(vo);
@@ -77,8 +91,8 @@ public class PlaceService {
 
 	public int insertPlace(PlaceVO vo, MultipartFile[] imgs) {
 		String jsonStr = getKakaoCoordinate(vo.getAddress() + vo.getDetailAddress());
-		String x = jsonStr.split("\"x\":\"")[1].split("\"")[0];
-		String y = jsonStr.split("\"y\":\"")[1].split("\"")[0];
+		String x = "0"; //jsonStr.split("\"x\":\"")[1].split("\"")[0];
+		String y = "0"; //jsonStr.split("\"y\":\"")[1].split("\"")[0];
 		System.out.println(x);
 		System.out.println(y);
 		vo.setX(Double.parseDouble(x));
@@ -133,10 +147,17 @@ public class PlaceService {
 			if (imgs[i].isEmpty())
 				break;
 			try {
-				// String extension = imgs[i].getOriginalFilename().split("\\.")[1]; jpg로 통일
-				String imgPath = "s3://stroll-s3/image/"
+				String imgPath = "image/"
 						+ vo.getNo() + "_" + (i + 1) + "." + "jpg";
-				imgs[i].transferTo(new File(imgPath));
+				
+				//S3에 업로드
+				PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+		                .bucket(AwsProps.s3Bucket)
+		                .key(imgPath)
+		                .contentType(imgs[i].getContentType())
+		                .build();
+
+		        s3Client.putObject(putObjectRequest, RequestBody.fromBytes(imgs[i].getBytes()));
 				//img 테이블에 추가
 				ImageVO imgVo = new ImageVO();
 				imgVo.setImagePath(imgPath);
