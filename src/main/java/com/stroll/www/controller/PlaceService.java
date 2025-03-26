@@ -42,7 +42,7 @@ public class PlaceService {
 	private ImageDAO imageDao; 
 	private final static int PAGE_SIZE = 10;
 	
-	private S3Client s3Client = S3Client.builder()		//S3 연결(인증)
+	private final S3Client s3Client = S3Client.builder()		//S3 연결(인증)
             .region(Region.AP_NORTHEAST_2)
             .credentialsProvider(StaticCredentialsProvider.create(
                     AwsBasicCredentials.create(AwsProps.s3AccessKeyId, AwsProps.s3SecretAccessKey)))
