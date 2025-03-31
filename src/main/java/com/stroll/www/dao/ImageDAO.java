@@ -21,4 +21,8 @@ public class ImageDAO{
 	public List<ImageVO> selectImgsByPlaceNo(@Param("placeNo") int placeNo){
 		return mybatis.selectList("image.selectImgsByPlaceNo", placeNo);
 	}
+
+	public int deleteImg(int no) {
+		return mybatis.delete("image.deleteImg", no);
+	}
 }

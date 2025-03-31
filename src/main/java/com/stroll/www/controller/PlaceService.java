@@ -1,7 +1,6 @@
 package com.stroll.www.controller;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
@@ -32,21 +31,23 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.DeleteObjectResponse;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 
 @Service
 public class PlaceService {
 	@Autowired
 	private PlaceDAO dao;
 	@Autowired
-	private ImageDAO imageDao; 
+	private ImageDAO imageDao;
 	private final static int PAGE_SIZE = 10;
-	
-	private final S3Client s3Client = S3Client.builder()		//S3 연결(인증)
-            .region(Region.AP_NORTHEAST_2)
-            .credentialsProvider(StaticCredentialsProvider.create(
-                    AwsBasicCredentials.create(AwsProps.s3AccessKeyId, AwsProps.s3SecretAccessKey)))
-            .build();
+
+	private final S3Client s3Client = S3Client.builder() // S3 연결(인증)
+			.region(Region.AP_NORTHEAST_2).credentialsProvider(StaticCredentialsProvider
+					.create(AwsBasicCredentials.create(AwsProps.s3AccessKeyId, AwsProps.s3SecretAccessKey)))
+			.build();
 
 	public PlaceVO getPlace(PlaceVO vo) {
 		vo = dao.getPlace(vo);
@@ -91,24 +92,20 @@ public class PlaceService {
 
 	public int insertPlace(PlaceVO vo, MultipartFile[] imgs) {
 		String jsonStr = getKakaoCoordinate(vo.getAddress() + vo.getDetailAddress());
-		String x = "0"; //jsonStr.split("\"x\":\"")[1].split("\"")[0];
-		String y = "0"; //jsonStr.split("\"y\":\"")[1].split("\"")[0];
-		System.out.println(x);
-		System.out.println(y);
+		String x = jsonStr.split("\"x\":\"")[1].split("\"")[0];
+		String y = jsonStr.split("\"y\":\"")[1].split("\"")[0];
 		vo.setX(Double.parseDouble(x));
 		vo.setY(Double.parseDouble(y));
 		int rslt = dao.insertPlace(vo);
-		if(rslt == 1)
+		if (rslt == 1)
 			uploadImgs(imgs, vo);
 		return vo.getNo();
-		// ,"x":"127.030921234166","y":"37.4924272855457"
 	}
 
 	private String getKakaoCoordinate(String address) {
 		String apiKey = ApiKey.kakaoApiKey;
 		String apiUrl = "https://dapi.kakao.com/v2/local/search/address.json";
 		String jsonString = null;
-		System.out.println(address);
 		try {
 			address = URLEncoder.encode(address, "UTF-8");
 
@@ -147,18 +144,14 @@ public class PlaceService {
 			if (imgs[i].isEmpty())
 				break;
 			try {
-				String imgPath = "image/"
-						+ vo.getNo() + "_" + (i + 1) + "." + "jpg";
-				
-				//S3에 업로드
-				PutObjectRequest putObjectRequest = PutObjectRequest.builder()
-		                .bucket(AwsProps.s3Bucket)
-		                .key(imgPath)
-		                .contentType(imgs[i].getContentType())
-		                .build();
+				String imgPath = "image/" + vo.getNo() + "_" + (i + 1) + "." + "jpg";
 
-		        s3Client.putObject(putObjectRequest, RequestBody.fromBytes(imgs[i].getBytes()));
-				//img 테이블에 추가
+				// S3에 업로드
+				PutObjectRequest putObjectRequest = PutObjectRequest.builder().bucket(AwsProps.s3Bucket).key(imgPath)
+						.contentType(imgs[i].getContentType()).build();
+
+				s3Client.putObject(putObjectRequest, RequestBody.fromBytes(imgs[i].getBytes()));
+				// img 테이블에 추가
 				ImageVO imgVo = new ImageVO();
 				imgVo.setImagePath(imgPath);
 				imgVo.setPlaceNo(vo.getNo());
@@ -171,11 +164,11 @@ public class PlaceService {
 		}
 		return;
 	}
-	
+
 	public List<String> getImgs(PlaceVO vo) {
 		List<ImageVO> imgs = imageDao.selectImgsByPlaceNo(vo.getNo());
 		List<String> rslt = new LinkedList<String>();
-		for(ImageVO img : imgs) {
+		for (ImageVO img : imgs) {
 			rslt.add(img.getImagePath());
 		}
 		return rslt;
@@ -222,15 +215,19 @@ public class PlaceService {
 	}
 
 	private void deleteImgs(PlaceVO vo) {
-		File dir = new File(
-				"C:\\Users\\Aiden\\Documents\\Codes\\SPRING\\stroll\\src\\main\\webapp\\resources\\upload\\imgs\\");
-		File[] files = dir.listFiles();
-		for(File file : files)
-		if (file.getName().contains(vo.getNo()+"_")) {
-			if (file.delete()) {
-				System.out.println("파일삭제 성공");
-			} else {
-				System.out.println("파일삭제 실패");
+		List<ImageVO> imgs = imageDao.selectImgsByPlaceNo(vo.getNo());
+		for(ImageVO img : imgs)
+		{
+			DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
+	                .bucket(AwsProps.s3Bucket)
+	                .key(img.getImagePath())
+	                .build();
+			try {
+				s3Client.deleteObject(deleteObjectRequest);
+				imageDao.deleteImg(img.getNo());
+			}catch(S3Exception e) {
+				e.printStackTrace();
+				System.out.println("이미지 삭제 실패");
 			}
 		}
 	}
