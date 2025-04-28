@@ -26,8 +26,8 @@ public class PlaceDAO {
 		return mybatis.insert("place.insertPlace", vo);
 	}
 
-	public List<PlaceVO> getPlaceListByAddress(PlaceVO vo) {
-		return mybatis.selectList("place.selectPlacesByAddress", vo);
+	public List<PlaceVO> getPlaceListByGuAddress(PlaceVO vo) {
+		return mybatis.selectList("place.selectPlacesByGuAddress", vo);
 	}
 
 	public int deletePlace(PlaceVO vo) {

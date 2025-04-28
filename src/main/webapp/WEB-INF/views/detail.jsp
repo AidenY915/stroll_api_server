@@ -62,7 +62,7 @@ https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/js/splide.min.js
 				</h2>
 				<p>★ ${place.star}</p>
 				<p>
-					<span>${place.address} ${place.detailAddress}</span>
+					<span>${place.guAddress} ${place.afterGuAddress} ${place.detailAddress}</span>
 				</p>
 				<p>${place.content}</p>
 				<c:if test="${id == place.userId}">

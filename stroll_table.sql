@@ -1,58 +1,61 @@
 CREATE DATABASE stroll;
-use stroll;
+USE stroll;
 
 DROP TABLE IF EXISTS user;
-CREATE TABLE user(
+CREATE TABLE user (
 	id CHAR(20) PRIMARY KEY,
-    password CHAR(20) NOT NULL,
-    nickname CHAR(20) NOT NULL UNIQUE,
-    email CHAR(50) NOT NULL
+	password CHAR(20) NOT NULL,
+	nickname CHAR(20) NOT NULL UNIQUE,
+	email CHAR(50) NOT NULL
 );
 
 DROP TABLE IF EXISTS place;
-CREATE TABLE place(
-	no INT PRIMARY KEY AUTO_INCREMENT,
-    title VARCHAR(100),
-    content TEXT(500),
-    category char(20),
-    writtenDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    address CHAR(80) NOT NULL,
-    detailAddress VARCHAR(80),
-    x double NOT NULL,
-    y double NOT NULL,
-    userId CHAR(20) NOT NULL,
-    CONSTRAINT fk_place_user_id FOREIGN KEY (userId) REFERENCES user(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_title_address_detailAddress (title, address, detailAddress)
+CREATE TABLE place (
+	place_no INT PRIMARY KEY AUTO_INCREMENT,
+	title VARCHAR(100),
+	content TEXT(500),
+	category CHAR(20),
+	written_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	gu_address CHAR(80) NOT NULL,
+	after_gu_address CHAR(80) NOT NULL,
+	detail_address VARCHAR(80),
+	x DOUBLE NOT NULL,
+	y DOUBLE NOT NULL,
+	user_id CHAR(20) NOT NULL,
+	CONSTRAINT fk_place_user_id FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE,
+	UNIQUE KEY uq_title_gu_aftergu_detail (title, gu_address, after_gu_address, detail_address)
 );
-CREATE INDEX ix_place_userId ON place(userId);
-CREATE INDEX ix_place_address ON place(address);
+CREATE INDEX ix_place_user_id ON place(user_id);
+CREATE INDEX ix_place_gu_address ON place(gu_address);
 
-CREATE TABLE image(
-	no INT PRIMARY KEY AUTO_INCREMENT,
-    place_no INT,
-    image_path varchar(200),
-    CONSTRAINT fk_image_place_id FOREIGN KEY (place_no) REFERENCES place(no) ON UPDATE CASCADE
+DROP TABLE IF EXISTS image;
+CREATE TABLE image (
+	image_no INT PRIMARY KEY AUTO_INCREMENT,
+	place_no INT,
+	image_path VARCHAR(200),
+	CONSTRAINT fk_image_place_no FOREIGN KEY (place_no) REFERENCES place(place_no) ON UPDATE CASCADE
 );
 
 DROP TABLE IF EXISTS reply;
-CREATE TABLE reply(
-	no INT PRIMARY KEY AUTO_INCREMENT,
-	userId CHAR(20) NOT NULL,
-    placeNo int NOT NULL,
-    content TEXT(500),
-    star TINYINT,
-    writtenDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
-	CONSTRAINT fk_reply_user_id FOREIGN KEY (userId) REFERENCES user(id) ON DELETE CASCADE,
-    CONSTRAINT fk_reply_place_no FOREIGN KEY (placeNo) REFERENCES place(no) ON DELETE CASCADE
+CREATE TABLE reply (
+	reply_no INT PRIMARY KEY AUTO_INCREMENT,
+	user_id CHAR(20) NOT NULL,
+	place_no INT NOT NULL,
+	content TEXT(500),
+	star TINYINT,
+	written_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
+	CONSTRAINT fk_reply_user_id FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE,
+	CONSTRAINT fk_reply_place_no FOREIGN KEY (place_no) REFERENCES place(place_no) ON DELETE CASCADE
 );
-CREATE INDEX ix_reply_placeNo ON reply(placeNo);
+CREATE INDEX ix_reply_place_no ON reply(place_no);
 
-CREATE TABLE wish(
-	no INT PRIMARY KEY AUTO_INCREMENT,
-    userId CHAR(20) NOT NULL,
-    placeNo int NOT NULL,
-    CONSTRAINT fk_wishList_user_id FOREIGN KEY (userId) REFERENCES user(id) ON DELETE CASCADE,
-    CONSTRAINT fk_wishList_place_no FOREIGN KEY (placeNo) REFERENCES place(no) ON DELETE CASCADE
+DROP TABLE IF EXISTS wish;
+CREATE TABLE wish (
+	wish_no INT PRIMARY KEY AUTO_INCREMENT,
+	user_id CHAR(20) NOT NULL,
+	place_no INT NOT NULL,
+	CONSTRAINT fk_wish_user_id FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE,
+	CONSTRAINT fk_wish_place_no FOREIGN KEY (place_no) REFERENCES place(place_no) ON DELETE CASCADE,
+	UNIQUE KEY uq_user_place (user_id, place_no)
 );
-ALTER TABLE wish ADD UNIQUE (userId, placeNo);
-CREATE INDEX ix_wish_userId ON wish(userId);
+CREATE INDEX ix_wish_user_id ON wish(user_id);

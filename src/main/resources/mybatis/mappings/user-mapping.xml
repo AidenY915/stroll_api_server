@@ -3,57 +3,97 @@
   PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="user">
+
+	<!-- 로그인 시 비밀번호 확인 -->
 	<select id="checkPassword" resultType="user">
-		SELECT id FROM USER WHERE
-		ID = #{id} AND PASSWORD = #{password}
+		SELECT id 
+		FROM user 
+		WHERE id = #{id} AND password = #{password}
 	</select>
+
+	<!-- ID로 사용자 조회 -->
 	<select id="selectUser" parameterType="user" resultType="user">
-		SELECT *
-		FROM USER WHERE
-		ID = #{id}
+		SELECT * 
+		FROM user 
+		WHERE id = #{id}
 	</select>
-	<select id = "selectUserByNickname" parameterType="user" resultType="user">
-		SELECT *
-		FROM USER WHERE
-		NICKNAME = #{nickname}
+
+	<!-- 닉네임으로 사용자 조회 -->
+	<select id="selectUserByNickname" parameterType="user" resultType="user">
+		SELECT * 
+		FROM user 
+		WHERE nickname = #{nickname}
 	</select>
+
+	<!-- 회원가입 -->
 	<insert id="registerUser" parameterType="user">
-		INSERT INTO USER
-		VALUES(#{id}, #{password}, #{nickname}, #{email})
+		INSERT INTO user (id, password, nickname, email)
+		VALUES (#{id}, #{password}, #{nickname}, #{email})
 	</insert>
 
+	<!-- 찜 목록 추가 -->
 	<insert id="insertToWishList" parameterType="wish">
-		INSERT INTO WISH
-		VALUES(NULL ,#{userId}, #{placeNo})
+		INSERT INTO wish (wish_no, user_id, place_no)
+		VALUES (NULL, #{userId}, #{placeNo})
 	</insert>
+
+	<!-- 찜 목록에서 삭제 -->
 	<delete id="deleteFromWishList" parameterType="wish">
-		DELETE FROM WISH
-		WHERE USERID = #{userId} AND PLACENO = #{placeNo}
+		DELETE FROM wish 
+		WHERE user_id = #{userId} AND place_no = #{placeNo}
 	</delete>
 
+	<!-- 단일 찜 조회 -->
 	<select id="selectWish" resultType="wish">
-		SELECT * FROM WISH WHERE
-		USERID = #{userId} AND PLACENO = #{placeNo}
+		SELECT * 
+		FROM wish 
+		WHERE user_id = #{userId} AND place_no = #{placeNo}
 	</select>
 
-	<select id="selectWishedPlaces" parameterType="wish"
-		resultType="place">
-		SELECT PLACE.NO "NO", TITLE, CONTENT, CATEGORY, WRITTENDATE, ADDRESS, DETAILADDRESS, X ,Y, PLACE.USERID "USERID" FROM WISH INNER JOIN PLACE ON WISH.PLACENO =
-		PLACE.NO WHERE WISH.USERID = #{userId}
+	<!-- 찜한 장소 전체 조회 -->
+	<select id="selectWishedPlaces" parameterType="wish" resultType="place">
+		SELECT 
+			place.place_no AS no,
+			title,
+			content,
+			category,
+			written_date AS writtenDate,
+			gu_address AS guAddress,
+			detail_address AS detailAddress,
+			x,
+			y,
+			place.user_id AS userId
+		FROM wish 
+		INNER JOIN place ON wish.place_no = place.place_no
+		WHERE wish.user_id = #{userId}
 	</select>
 
-	<select id="selectUserPlaces" parameterType="user"
-		resultType="place">
-		SELECT * FROM PLACE WHERE USERID = #{id}
+	<!-- 사용자가 작성한 장소들 -->
+	<select id="selectUserPlaces" parameterType="user" resultType="place">
+		SELECT * 
+		FROM place 
+		WHERE user_id = #{id}
 	</select>
 
-	<select id="selectUserReviews" parameterType="user"
-		resultType="reply">
-		SELECT REPLY.NO "NO", REPLY.USERID "USERID", PLACENO, REPLY.CONTENT "CONTENT", STAR, REPLY.WRITTENDATE "WRITTENDATE", PLACE.TITLE "PLACETITLE" FROM REPLY INNER JOIN PLACE ON REPLY.PLACENO = PLACE.NO  WHERE REPLY.USERID = #{id}
+	<!-- 사용자가 작성한 리뷰들 -->
+	<select id="selectUserReviews" parameterType="user" resultType="reply">
+		SELECT 
+			reply.reply_no AS no,
+			reply.user_id AS userId,
+			place_no AS placeNo,
+			reply.content AS content,
+			star,
+			reply.written_date AS writtenDate,
+			place.title AS placeTitle
+		FROM reply 
+		INNER JOIN place ON reply.place_no = place.place_no  
+		WHERE reply.user_id = #{id}
 	</select>
-	
+
+	<!-- 회원 탈퇴 -->
 	<delete id="deleteUser" parameterType="user">
-		DELETE FROM USER WHERE ID
-		= #{id} AND PASSWORD = #{password}
+		DELETE FROM user 
+		WHERE id = #{id} AND password = #{password}
 	</delete>
+
 </mapper>

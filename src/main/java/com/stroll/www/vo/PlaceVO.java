@@ -14,7 +14,8 @@ public class PlaceVO implements Serializable {
 	private String content;
 	private String category;
 	private Timestamp writtenDate;
-	private String address;
+	private String guAddress;
+	private String afterGuAddress;
 	private String detailAddress;
 	private double x;
 	private double y;
@@ -70,12 +71,20 @@ public class PlaceVO implements Serializable {
 		this.writtenDate = writtenDate;
 	}
 
-	public String getAddress() {
-		return address;
+	public String getGuAddress() {
+		return guAddress;
 	}
 
-	public void setAddress(String address) {
-		this.address = address;
+	public void setGuAddress(String guAddress) {
+		this.guAddress = guAddress;
+	}
+
+	public String getAfterGuAddress() {
+		return afterGuAddress;
+	}
+
+	public void setAfterGuAddress(String afterGuAddress) {
+		this.afterGuAddress = afterGuAddress;
 	}
 
 	public String getDetailAddress() {
@@ -119,7 +128,7 @@ public class PlaceVO implements Serializable {
 	}
 
 	public String toString() {
-		return "{no:" + no +", title:" + title + ", content:" + content + ", category:" + category + ", writtenDate:" + writtenDate + ", address:" + address + ", detailAddress:" + detailAddress + ", x:" + x + ", y:" + y + "}";
+		return "{no:" + no +", title:" + title + ", content:" + content + ", category:" + category + ", writtenDate:" + writtenDate + ", address:" + guAddress + ", afterGuAddress:" + afterGuAddress + ", detailAddress:" + detailAddress + ", x:" + x + ", y:" + y + "}";
 	}
 
 }

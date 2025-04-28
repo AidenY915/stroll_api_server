@@ -1,33 +1,22 @@
 package com.stroll.www.controller;
 
-import java.io.InputStream;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.InputStreamResource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import com.stroll.www.property.AwsProps;
 import com.stroll.www.vo.PlaceVO;
 import com.stroll.www.vo.WishVO;
-
-import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
-import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
-import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
-import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
 
 @Controller
 public class PlaceController {
@@ -37,9 +26,22 @@ public class PlaceController {
 	private ReplyService replyService;
 	@Autowired
 	private UserService userService;
+	
+	private String extractGuAddress(String fullAddress) {
+		if (fullAddress == null || fullAddress.isEmpty()) {
+	        return "";
+	    }
+	    Pattern pattern = Pattern.compile("^(.+?(구|군))");
+	    Matcher matcher = pattern.matcher(fullAddress);
+	    if (matcher.find()) {
+	        return matcher.group(1).trim(); // 전체 매칭된 부분 리턴
+	    }
+	    return ""; // 구나 군이 없을 경우 빈 문자열
+	}
 
 	@RequestMapping("/aroundme")
-	public String showAroundme(PlaceVO vo, Model model, HttpServletRequest request) {
+	public String showAroundme(@RequestParam(value = "address", required = false) String address, PlaceVO vo, Model model, HttpServletRequest request) {
+		vo.setGuAddress(address);
 		String keywords = request.getParameter("keywords");
 		String order = request.getParameter("order");
 		String pageStr = request.getParameter("page");
@@ -74,12 +76,14 @@ public class PlaceController {
 		}
 		return "detail";
 	}
-
+	
 	@RequestMapping(value = "/insertPlace", method = RequestMethod.POST)
-	public String insertPlace(@RequestParam("imgs") MultipartFile[] imgs, PlaceVO vo, HttpSession session, RedirectAttributes redirect) {
+	public String insertPlace(@RequestParam("imgs") MultipartFile[] imgs, @RequestParam("address") String address, PlaceVO vo, HttpSession session, RedirectAttributes redirect) {
 		String id = (String)session.getAttribute("id");
 		if(id == null) return "redirect:/";
 		vo.setUserId(id);
+		vo.setGuAddress(extractGuAddress(address));
+		vo.setAfterGuAddress(address.replace(vo.getGuAddress(),"").trim());
 		redirect.addAttribute("no", placeService.insertPlace(vo, imgs));
 		return "redirect:detail";
 	}
@@ -90,27 +94,4 @@ public class PlaceController {
 			return "redirect:detail?no="+vo.getNo();
 		return "redirect:aroundme"; 
 	}
-	
-	private final S3Client s3Client = S3Client.builder()		//S3 연결(인증)
-            .region(Region.AP_NORTHEAST_2)
-            .credentialsProvider(StaticCredentialsProvider.create(
-                    AwsBasicCredentials.create(AwsProps.s3AccessKeyId, AwsProps.s3SecretAccessKey)))
-            .build();
-	
-	@RequestMapping(value = "/image/{imgName:.+}") //S3에서 이미지 가져와서 바로 전달 :.+를 안하면 PathVariable은 .부터 확장자를 자르고 받아옴. PathMatcher 때문 
-	public ResponseEntity<InputStreamResource> getImageFromS3(@PathVariable String imgName) {
-		String key = "image/" + imgName;
-		GetObjectRequest getObjectRequest = GetObjectRequest.builder()
-				.bucket(AwsProps.s3Bucket)
-				.key(key)
-				.build();
-		InputStream inputStream = s3Client.getObject(getObjectRequest);
-		HeadObjectResponse s3ObjectInfo = s3Client.headObject(r -> r.bucket(AwsProps.s3Bucket).key(key));
-		
-		return ResponseEntity.ok()
-				.contentLength(s3ObjectInfo.contentLength())
-				.contentType(MediaType.IMAGE_JPEG)
-				.body(new InputStreamResource(inputStream));
-	}
-	
 }

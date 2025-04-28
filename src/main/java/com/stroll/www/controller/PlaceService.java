@@ -65,13 +65,13 @@ public class PlaceService {
 		vo.setDetailAddress(keywords);
 		if (vo.getCategory() == null)
 			vo.setCategory("");
-		if (vo.getAddress() == null || vo.getAddress().equals("")) {
-			vo.setAddress(keywords);
+		if (vo.getGuAddress() == null || vo.getGuAddress().equals("")) {		//내 위치 설정 -> 내 구에 있는 장소들만 검색
+			vo.setGuAddress(keywords);
 			listFromDb = dao.getPlaceList(vo);
 		} else {
-			String addressRegex = vo.getAddress().replaceAll("(특별시|광역시|시)", "[가-힣]{0,3}").replaceAll("^[가-힣]+도", "");
-			vo.setAddress(addressRegex);
-			listFromDb = dao.getPlaceListByAddress(vo);
+			String guAddressRegex = vo.getGuAddress().replaceAll("(특별시|광역시|시)", "[가-힣]{0,3}").replaceAll("^[가-힣]+도", "");
+			vo.setGuAddress(guAddressRegex);
+			listFromDb = dao.getPlaceListByGuAddress(vo);
 		}
 		for (PlaceVO place : listFromDb) {
 			place.setDistance((int) Math.pow(((Math.pow(place.getX() * 1849 - vo.getX() * 1849, 2)
@@ -91,7 +91,7 @@ public class PlaceService {
 	}
 
 	public int insertPlace(PlaceVO vo, MultipartFile[] imgs) {
-		String jsonStr = getKakaoCoordinate(vo.getAddress() + vo.getDetailAddress());
+		String jsonStr = getKakaoCoordinate(vo.getGuAddress() + vo.getAfterGuAddress());
 		String x = jsonStr.split("\"x\":\"")[1].split("\"")[0];
 		String y = jsonStr.split("\"y\":\"")[1].split("\"")[0];
 		vo.setX(Double.parseDouble(x));
