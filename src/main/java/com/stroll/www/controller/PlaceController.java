@@ -7,16 +7,28 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.stroll.www.property.AwsProps;
 import com.stroll.www.vo.PlaceVO;
 import com.stroll.www.vo.WishVO;
+
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.core.ResponseBytes;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 
 @Controller
 public class PlaceController {
@@ -26,6 +38,10 @@ public class PlaceController {
 	private ReplyService replyService;
 	@Autowired
 	private UserService userService;
+	private final S3Client s3Client = S3Client.builder() // S3 연결(인증)
+			.region(Region.AP_NORTHEAST_2).credentialsProvider(StaticCredentialsProvider
+					.create(AwsBasicCredentials.create(AwsProps.s3AccessKeyId, AwsProps.s3SecretAccessKey)))
+			.build();
 	
 	private String extractGuAddress(String fullAddress) {
 		if (fullAddress == null || fullAddress.isEmpty()) {
@@ -87,6 +103,7 @@ public class PlaceController {
 		redirect.addAttribute("no", placeService.insertPlace(vo, imgs));
 		return "redirect:detail";
 	}
+	
 	@RequestMapping(value = "/deletePlace")
 	public String deletePlace(PlaceVO vo, HttpSession session) {
 		String id = (String) session.getAttribute("id");
@@ -94,4 +111,18 @@ public class PlaceController {
 			return "redirect:detail?no="+vo.getNo();
 		return "redirect:aroundme"; 
 	}
+	
+	@RequestMapping(value = "/image/{image_title:.+}", method = RequestMethod.GET)
+	public ResponseEntity<byte[]> getImageFromS3(@PathVariable String image_title) {
+        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                .bucket(AwsProps.s3Bucket)
+                .key("image/" + image_title)
+                .build();
+
+        ResponseBytes<GetObjectResponse> objectBytes = s3Client.getObjectAsBytes(getObjectRequest);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_JPEG)
+                .body(objectBytes.asByteArray());
+    }
 }

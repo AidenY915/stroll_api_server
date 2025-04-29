@@ -85,7 +85,7 @@
 				<ul class="results">
 					<c:forEach var="place" items="${places}">
 						<li><a href='detail?no=${place.no}'> <img
-								class="placeImg" src="images/${place.no}_1.jpg"
+								class="placeImg" src="image/${place.no}_1.jpg"
 								onerror=this.src="pages/images/180x240_placeholder.jpg">
 								<div>
 									<p>
