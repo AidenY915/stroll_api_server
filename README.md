@@ -42,7 +42,7 @@
 <hr>
 <div align="center">
   <h3>ERD</h3>
-    <img src = "https://github.com/AidenY915/stroll_spring/blob/main/images_for_readme/ERD.png" width = "300px" align="center">
+    <img src = "https://github.com/AidenY915/stroll_spring/blob/distribution/images_for_readme/ERD.png" width = "300px" align="center">
 </div>
 <hr>
 <div>
