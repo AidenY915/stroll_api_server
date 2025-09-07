@@ -1,26 +1,33 @@
 package com.stroll.www.controller;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
+import com.stroll.www.response.PlaceDetailResponse;
+import com.stroll.www.response.PlaceListResponse;
+import com.stroll.www.response.PlaceSummaryResponse;
+import com.stroll.www.response.ReviewResponse;
+import com.stroll.www.vo.ReplyVO;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.stroll.www.property.AwsProps;
 import com.stroll.www.vo.PlaceVO;
 import com.stroll.www.vo.WishVO;
+import com.stroll.www.controller.PlaceService;
+import com.stroll.www.controller.ReplyService;
+import com.stroll.www.controller.UserService;
 
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
@@ -30,7 +37,8 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 
-@Controller
+@RestController
+@RequestMapping("/api")
 public class PlaceController {
 	@Autowired
 	private PlaceService placeService;
@@ -55,43 +63,66 @@ public class PlaceController {
 	    return ""; // 구나 군이 없을 경우 빈 문자열
 	}
 
-	@RequestMapping("/aroundme")
-	public String showAroundme(@RequestParam(value = "address", required = false) String address, PlaceVO vo, Model model, HttpServletRequest request) {
-		vo.setGuAddress(address);
-		String keywords = request.getParameter("keywords");
-		String order = request.getParameter("order");
-		String pageStr = request.getParameter("page");
-		String maxDistanceStr = request.getParameter("maxDistance");
-		String minStarStr = request.getParameter("minStar");
-		int maxDistance = maxDistanceStr == null ? -1 : Integer.parseInt(maxDistanceStr);
-		int minStar = minStarStr == null ? -1 : Integer.parseInt(minStarStr);
-		if (keywords == null)
-			keywords = "";
-		if (order == null)
-			order = "distance";
-		int page = pageStr == null ? 1 : Integer.parseInt(pageStr);
-		model.addAttribute("places", placeService.getPlaceList(vo, keywords, order, page, request , maxDistance, minStar));
-		int numOfPages = (Integer) request.getAttribute("numOfPages");
-		int firstPage = page - 4 >= 1 ? page - 4 : 1;
-		int lastPage = firstPage + 8 <= numOfPages ? firstPage + 8 : numOfPages;
-		model.addAttribute("firstPage", firstPage);
-		model.addAttribute("lastPage", lastPage);
-		return "aroundme";
-	}
+    @GetMapping(value = "/places", produces = "application/json;charset=UTF-8")
+    public ResponseEntity<PlaceListResponse> showAroundme(
+            @RequestParam(value = "address", required = false) String address,
+            @RequestParam(value = "keywords", defaultValue = "") String keywords,
+            @RequestParam(value = "order", defaultValue = "distance") String order,
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "maxDistance", defaultValue = "-1") int maxDistance,
+            @RequestParam(value = "minStar", defaultValue = "-1") int minStar,
+            HttpServletRequest request
+    ) {
+        // 기존 vo 사용
+        PlaceVO vo = new PlaceVO();
+        vo.setGuAddress(address);
 
-	@RequestMapping("/detail")
-	public String showDetail(PlaceVO vo, WishVO wishVO, Model model, HttpSession session) {
-		model.addAttribute("place", placeService.getPlace(vo));
-		model.addAttribute("imgs", placeService.getImgs(vo));
-		model.addAttribute("replies", replyService.selectReplies(vo));
+        // 서비스 호출
+        List<PlaceVO> searchedPlaces =
+                placeService.getPlaceList(vo, keywords, order, page, request, maxDistance, minStar);
+
+        // 총 페이지 수 (기존에 request attribute로 넣던 값 활용)
+        int numOfPages = (Integer) request.getAttribute("numOfPages");
+
+        // VO -> DTO 변환
+        List<PlaceSummaryResponse> places = searchedPlaces.stream()
+                .map(PlaceSummaryResponse::from)
+                .toList();
+
+        // 응답 래퍼 구성
+        PlaceListResponse body = new PlaceListResponse(places, numOfPages);
+
+        return ResponseEntity.ok(body);
+    }
+
+	@RequestMapping("/place/{placeNo}")
+	public ResponseEntity<PlaceDetailResponse> showDetail(@PathVariable(value = "placeNo") int placeNo, HttpSession session) {
+        PlaceVO place = new PlaceVO();
+        System.out.println(placeNo);
+        place.setNo(placeNo);
+        place = placeService.getPlace(place);
+        PlaceDetailResponse placeDetailResponse = PlaceDetailResponse.from(place);
+
+//		List<String> imgs =  placeService.getImgs(place);
+
 		String id = (String) session.getAttribute("id");
 		if (id != null) {
+            WishVO wishVO = new WishVO();
 			wishVO.setUserId(id);
-			wishVO.setPlaceNo(vo.getNo());
-			model.addAttribute("isWishedPlace", userService.isWishedPlace(wishVO));
+			wishVO.setPlaceNo(place.getNo());
+            placeDetailResponse.setWished(userService.isWishedPlace(wishVO));
 		}
-		return "detail";
+        return ResponseEntity.ok(placeDetailResponse);
 	}
+
+    @RequestMapping("/place/{placeNo}/reviews")
+    public ResponseEntity<List<ReviewResponse>> getReviewsOfPlace(@PathVariable(value = "placeNo") int placeNo) {
+        PlaceVO place = new PlaceVO();
+        place.setNo(placeNo);
+        List<ReplyVO> replies =  replyService.selectReplies(place);
+        List<ReviewResponse> reviewListResponse  = new LinkedList<>(replies.stream().map(ReviewResponse::from).toList());
+        return ResponseEntity.ok(reviewListResponse);
+    }
 	
 	@RequestMapping(value = "/insertPlace", method = RequestMethod.POST)
 	public String insertPlace(@RequestParam("imgs") MultipartFile[] imgs, @RequestParam("address") String address, PlaceVO vo, HttpSession session, RedirectAttributes redirect) {
