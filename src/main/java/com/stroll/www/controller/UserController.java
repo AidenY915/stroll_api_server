@@ -2,12 +2,17 @@ package com.stroll.www.controller;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Map;
 
+import com.stroll.www.response.PlaceDetailResponse;
+import com.stroll.www.response.TokenResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,30 +22,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.stroll.www.vo.UserVO;
 import com.stroll.www.vo.WishVO;
 import com.stroll.www.controller.UserService;
+import org.springframework.web.bind.annotation.RestController;
 
-@Controller
+@RestController
+@RequestMapping("/api")
 public class UserController {
 	@Autowired
 	private UserService service;
 
-	@RequestMapping(value = "/login", method = RequestMethod.POST)
-	public String login(UserVO vo, @RequestParam("path") String path, HttpServletRequest request) {
-		String id = service.login(vo);
-		if (id != null) {
-			HttpSession session = request.getSession();
-			session.setAttribute("id", id);
-			session.setMaxInactiveInterval(60 * 20);
-		}
-		System.out.println("id : " + id);
-		System.out.println(path);
-		return "redirect:" + path.replace(request.getContextPath(), "");
-	}
-
-	@RequestMapping(value = "/logout")
-	public String logout(HttpServletRequest request) {
-		request.getSession().invalidate();
-		return "redirect:/";
-	}
+/*
 
 	@RequestMapping(value = "/registerOK")
 	public String register(UserVO vo) {
@@ -105,5 +95,5 @@ public class UserController {
 		}
 		return "redirect:logout";
 	}
-	
+*/
 }

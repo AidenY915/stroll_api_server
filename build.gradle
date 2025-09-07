@@ -43,6 +43,14 @@ dependencies {
     // lombok 1.18.34
     compileOnly 'org.projectlombok:lombok:1.18.34'
     annotationProcessor 'org.projectlombok:lombok:1.18.34'
+
+    // jjwt
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
+    runtimeOnly  'io.jsonwebtoken:jjwt-impl:0.12.5'
+    runtimeOnly  'io.jsonwebtoken:jjwt-jackson:0.12.5'
+
+    // Apache Commons Codec 16진수 -> 바이트 코드를 위함
+    implementation 'commons-codec:commons-codec:1.16.0'
 }
 
 tasks.named('test') {

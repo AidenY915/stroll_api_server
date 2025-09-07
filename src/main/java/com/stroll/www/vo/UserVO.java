@@ -9,6 +9,10 @@ public class UserVO implements Serializable{
 	private String nickname;
 	private String email;
 	public UserVO() {}
+    public UserVO(String id, String password) {
+        this.id = id;
+        this.password = password;
+    }
 	public String getId() {
 		return id;
 	}

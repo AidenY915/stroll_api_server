@@ -13,6 +13,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.stroll.www.vo.ReplyVO;
 import com.stroll.www.controller.ReplyService;
 
+/*
 @Controller
 public class ReplyController {
 	@Autowired
@@ -38,3 +39,4 @@ public class ReplyController {
 		return "redirect:detail";
 	}
 }
+*/

@@ -51,17 +51,17 @@ public class PlaceController {
 					.create(AwsBasicCredentials.create(AwsProps.s3AccessKeyId, AwsProps.s3SecretAccessKey)))
 			.build();
 	
-	private String extractGuAddress(String fullAddress) {
-		if (fullAddress == null || fullAddress.isEmpty()) {
-	        return "";
-	    }
-	    Pattern pattern = Pattern.compile("^(.+?(구|군))");
-	    Matcher matcher = pattern.matcher(fullAddress);
-	    if (matcher.find()) {
-	        return matcher.group(1).trim(); // 전체 매칭된 부분 리턴
-	    }
-	    return ""; // 구나 군이 없을 경우 빈 문자열
-	}
+//	private String extractGuAddress(String fullAddress) {
+//		if (fullAddress == null || fullAddress.isEmpty()) {
+//	        return "";
+//	    }
+//	    Pattern pattern = Pattern.compile("^(.+?(구|군))");
+//	    Matcher matcher = pattern.matcher(fullAddress);
+//	    if (matcher.find()) {
+//	        return matcher.group(1).trim(); // 전체 매칭된 부분 리턴
+//	    }
+//	    return ""; // 구나 군이 없을 경우 빈 문자열
+//	}
 
     @GetMapping(value = "/places", produces = "application/json;charset=UTF-8")
     public ResponseEntity<PlaceListResponse> showAroundme(
@@ -73,6 +73,12 @@ public class PlaceController {
             @RequestParam(value = "minStar", defaultValue = "-1") int minStar,
             HttpServletRequest request
     ) {
+        System.out.println(address);
+        System.out.println(keywords);
+        System.out.println(order);
+        System.out.println(page);
+        System.out.println(maxDistance);
+        System.out.println(minStar);
         // 기존 vo 사용
         PlaceVO vo = new PlaceVO();
         vo.setGuAddress(address);
@@ -95,7 +101,7 @@ public class PlaceController {
         return ResponseEntity.ok(body);
     }
 
-	@RequestMapping("/place/{placeNo}")
+	@RequestMapping(value = "/place/{placeNo}", produces = "application/json;charset=UTF-8")
 	public ResponseEntity<PlaceDetailResponse> showDetail(@PathVariable(value = "placeNo") int placeNo, HttpSession session) {
         PlaceVO place = new PlaceVO();
         System.out.println(placeNo);
@@ -115,7 +121,7 @@ public class PlaceController {
         return ResponseEntity.ok(placeDetailResponse);
 	}
 
-    @RequestMapping("/place/{placeNo}/reviews")
+    @RequestMapping(value = "/place/{placeNo}/reviews", produces = "application/json;charset=UTF-8")
     public ResponseEntity<List<ReviewResponse>> getReviewsOfPlace(@PathVariable(value = "placeNo") int placeNo) {
         PlaceVO place = new PlaceVO();
         place.setNo(placeNo);
@@ -123,7 +129,7 @@ public class PlaceController {
         List<ReviewResponse> reviewListResponse  = new LinkedList<>(replies.stream().map(ReviewResponse::from).toList());
         return ResponseEntity.ok(reviewListResponse);
     }
-	
+/*
 	@RequestMapping(value = "/insertPlace", method = RequestMethod.POST)
 	public String insertPlace(@RequestParam("imgs") MultipartFile[] imgs, @RequestParam("address") String address, PlaceVO vo, HttpSession session, RedirectAttributes redirect) {
 		String id = (String)session.getAttribute("id");
@@ -142,7 +148,7 @@ public class PlaceController {
 			return "redirect:detail?no="+vo.getNo();
 		return "redirect:aroundme"; 
 	}
-	
+*/
 	@RequestMapping(value = "/image/{image_title:.+}", method = RequestMethod.GET)
 	public ResponseEntity<byte[]> getImageFromS3(@PathVariable String image_title) {
         GetObjectRequest getObjectRequest = GetObjectRequest.builder()
@@ -156,4 +162,5 @@ public class PlaceController {
                 .contentType(MediaType.IMAGE_JPEG)
                 .body(objectBytes.asByteArray());
     }
+
 }
