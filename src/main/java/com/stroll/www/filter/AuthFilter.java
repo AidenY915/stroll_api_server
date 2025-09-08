@@ -23,7 +23,7 @@ public class AuthFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         // 완전히 제외할 경로 있으면 추가(정적 리소스, 헬스체크 등)
-        return "OPTIONS".equals(request.getMethod());
+        return "OPTIONS".equalsIgnoreCase(request.getMethod());
     }
 
     @Override

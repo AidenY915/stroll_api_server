@@ -9,7 +9,7 @@ public class CorsConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry reg) {
         reg.addMapping("/api/**")
-                .allowedOriginPatterns("http://localhost:*", "http://127.0.0.1:*", "https://your-frontend.app")
+                .allowedOriginPatterns("http://localhost", "http://localhost:*", "http://127.0.0.1:*", "https://your-frontend.app")
                 .allowedMethods("GET","POST","PUT","DELETE","PATCH","OPTIONS")
                 .allowedHeaders("*")
                 .exposedHeaders("Location","X-RateLimit-Remaining")
