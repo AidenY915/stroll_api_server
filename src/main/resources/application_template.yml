@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: stroll-api
+  datasource:
+    url: jdbc:mysql://${DB_HOST:~~~}:${DB_PORT:~~~}/stroll?serverTimezone=Asia/Seoul
+    username: ${DB_USER:~~~}
+    password: ${DB_PASS:~~~}
+
+mybatis:
+    config-location: classpath:mybatis/mybatis-config.xml
+
+jwt:
+  secret: ${JWT_SECRET_KEY:~~~}
+  expiration: ${JWT_EXPIRATION:~~~}
+
+cors:
+  frontend-url: ${FRONTEND_URL:~~~}
