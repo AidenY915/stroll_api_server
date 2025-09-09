@@ -1,6 +1,8 @@
 package com.stroll.www.controller;
 
 import com.stroll.www.request.LoginRequest;
+import com.stroll.www.request.RegisterRequest;
+import com.stroll.www.response.CheckIdResponse;
 import com.stroll.www.response.TokenResponse;
 import com.stroll.www.vo.UserVO;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,14 +16,14 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/auth")
 public class AuthController {
     @Autowired
     private UserService userService;
     @Autowired
     private JwtService jwtService;
 
-    @RequestMapping(value = "/auth/login", method = RequestMethod.POST, consumes = "application/json", produces = "application/json;charset=UTF-8")
+    @RequestMapping(value = "/login", method = RequestMethod.POST, consumes = "application/json", produces = "application/json;charset=UTF-8")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest, HttpServletRequest request) {
         UserVO userVo = new UserVO(loginRequest.getUserId(), loginRequest.getPassword());
         String id = userService.login(userVo);
@@ -47,6 +49,29 @@ public class AuthController {
         TokenResponse tokenResponse = new TokenResponse(token);
         return ResponseEntity.ok(tokenResponse);
     }
+    @GetMapping(value = "check-id/{userId}", produces = "application/json;charset=UTF-8")
+    public ResponseEntity<CheckIdResponse> checkId(@PathVariable("userId") String userId) {
+        UserVO userVo = new UserVO();
+        userVo.setId(userId);
+        CheckIdResponse checkIdResponse = new CheckIdResponse(userId, userService.checkId(userVo));
+        return ResponseEntity.ok(checkIdResponse);
+    }
+    @PostMapping(value = "register", consumes = "application/json", produces = "application/json;charset=UTF-8")
+    public ResponseEntity<?> register(@RequestBody RegisterRequest registerRequest, HttpServletRequest req){
+        if(req.getAttribute("auth.userId") != null)
+            return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST) // 401
+                .body(Map.of(
+                        "message", "Wrong Access"
+                ));
+
+        UserVO userVo = registerRequest.to();
+        userService.registerUser(userVo);
+        return ResponseEntity.ok(Map.of(
+                "message", "Register Done"
+        ));
+    }
+
 /*
 	@RequestMapping(value = "/logout")
 	public String logout(HttpServletRequest request) {

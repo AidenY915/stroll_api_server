@@ -111,6 +111,7 @@ public class PlaceController {
 
 //		List<String> imgs =  placeService.getImgs(place);
 
+        //찜한 곳인지 표시
 		String id = (String) session.getAttribute("id");
 		if (id != null) {
             WishVO wishVO = new WishVO();

@@ -1,7 +1,10 @@
 package com.stroll.www.vo;
 
+import lombok.AllArgsConstructor;
+
 import java.io.Serializable;
 
+@AllArgsConstructor
 public class UserVO implements Serializable{
 	private static final long serialVersionUID = -8799908554156269389L;
 	private String id;

@@ -28,20 +28,19 @@ public class UserService {
 	}
 
 	public void registerUser(UserVO vo) {
-		dao.registerUser(vo);
+		if(!checkId(vo))
+            return;
+        if(!vo.getId().matches("^[a-zA-Z0-9]+$"))
+            return;
+        dao.registerUser(vo);
 	}
 
-	public void duplicateCheck(UserVO vo, PrintWriter out) {
+	public boolean checkId(UserVO vo) {
 		if (vo.getId() != null)
 			vo = dao.selectUser(vo);
-		else if (vo.getNickname() != null)
-			vo = dao.selectUserByNickname(vo);
-		if (vo == null) {
-			out.print("true");
-		} else {
-			out.print("false");
-		}
-		return;
+		if (vo == null)
+			return true;
+		return false;
 	}
 
 	public void addToWishList(WishVO vo) {
