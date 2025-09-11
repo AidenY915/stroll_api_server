@@ -2,6 +2,7 @@ package com.stroll.www.controller;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -13,10 +14,13 @@ import com.stroll.www.vo.ReplyVO;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 
+import org.apache.catalina.connector.Response;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -51,17 +55,17 @@ public class PlaceController {
 					.create(AwsBasicCredentials.create(AwsProps.s3AccessKeyId, AwsProps.s3SecretAccessKey)))
 			.build();
 	
-//	private String extractGuAddress(String fullAddress) {
-//		if (fullAddress == null || fullAddress.isEmpty()) {
-//	        return "";
-//	    }
-//	    Pattern pattern = Pattern.compile("^(.+?(구|군))");
-//	    Matcher matcher = pattern.matcher(fullAddress);
-//	    if (matcher.find()) {
-//	        return matcher.group(1).trim(); // 전체 매칭된 부분 리턴
-//	    }
-//	    return ""; // 구나 군이 없을 경우 빈 문자열
-//	}
+	private String extractGuAddress(String fullAddress) {
+		if (fullAddress == null || fullAddress.isEmpty()) {
+	        return "";
+	    }
+	    Pattern pattern = Pattern.compile("^(.+?(구|군))");
+	    Matcher matcher = pattern.matcher(fullAddress);
+	    if (matcher.find()) {
+	        return matcher.group(1).trim(); // 전체 매칭된 부분 리턴
+	    }
+	    return ""; // 구나 군이 없을 경우 빈 문자열
+	}
 
     @GetMapping(value = "/places", produces = "application/json;charset=UTF-8")
     public ResponseEntity<PlaceListResponse> showAroundme(
@@ -101,7 +105,7 @@ public class PlaceController {
         return ResponseEntity.ok(body);
     }
 
-	@RequestMapping(value = "/place/{placeNo}", produces = "application/json;charset=UTF-8")
+	@GetMapping(value = "/place/{placeNo}", produces = "application/json;charset=UTF-8")
 	public ResponseEntity<PlaceDetailResponse> showDetail(@PathVariable(value = "placeNo") int placeNo, HttpSession session) {
         PlaceVO place = new PlaceVO();
         System.out.println(placeNo);
@@ -130,18 +134,27 @@ public class PlaceController {
         List<ReviewResponse> reviewListResponse  = new LinkedList<>(replies.stream().map(ReviewResponse::from).toList());
         return ResponseEntity.ok(reviewListResponse);
     }
-/*
-	@RequestMapping(value = "/insertPlace", method = RequestMethod.POST)
-	public String insertPlace(@RequestParam("imgs") MultipartFile[] imgs, @RequestParam("address") String address, PlaceVO vo, HttpSession session, RedirectAttributes redirect) {
-		String id = (String)session.getAttribute("id");
-		if(id == null) return "redirect:/";
+    @Transactional
+	@PostMapping(value = "/place")
+	public ResponseEntity<?> insertPlace(@RequestParam("imgs") MultipartFile[] imgs,@RequestParam("placeName") String placeName, @RequestParam("address") String address, @RequestParam("detailAddress") String detailAddress, @RequestParam("content") String content, @RequestParam("category") String category, HttpServletRequest req) {
+		String id = (String)req.getAttribute("auth.userId");
+		if(id == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED) // 401
+                .body(Map.of(
+                        "message", "로그인이 필요합니다."
+                ));
+        PlaceVO vo = new PlaceVO();
 		vo.setUserId(id);
+        vo.setTitle(placeName);
+        vo.setCategory(category);
+        vo.setContent(content);
 		vo.setGuAddress(extractGuAddress(address));
 		vo.setAfterGuAddress(address.replace(vo.getGuAddress(),"").trim());
-		redirect.addAttribute("no", placeService.insertPlace(vo, imgs));
-		return "redirect:detail";
+        vo.setDetailAddress(detailAddress);
+        int placeNo = placeService.insertPlace(vo, imgs);
+
+		return ResponseEntity.ok(Map.of("message", "place posting success", "placeNo", placeNo));
 	}
-	
+/*
 	@RequestMapping(value = "/deletePlace")
 	public String deletePlace(PlaceVO vo, HttpSession session) {
 		String id = (String) session.getAttribute("id");

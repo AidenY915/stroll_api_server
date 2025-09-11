@@ -32,24 +32,6 @@ public class UserController {
 
 /*
 
-	@RequestMapping(value = "/registerOK")
-	public String register(UserVO vo) {
-		System.out.println("<register 컨트롤러>");
-		service.registerUser(vo);
-		return "redirect:/";
-	}
-
-	@RequestMapping(value = "/")
-	public void idDuplicateCheck(UserVO vo, HttpServletResponse response) {
-		try (PrintWriter out = response.getWriter()) {
-			service.duplicateCheck(vo, out);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		response.setStatus(200);
-		return;
-	}
-
 	@RequestMapping("/mypage")
 	public String myPage(WishVO wishVO, UserVO userVO,Model model, HttpServletRequest request) {
 		String id = (String)request.getSession().getAttribute("id");
