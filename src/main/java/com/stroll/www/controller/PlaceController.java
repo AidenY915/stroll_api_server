@@ -75,17 +75,24 @@ public class PlaceController {
             @RequestParam(value = "page", defaultValue = "1") int page,
             @RequestParam(value = "maxDistance", defaultValue = "-1") int maxDistance,
             @RequestParam(value = "minStar", defaultValue = "-1") int minStar,
+            @RequestParam(value = "x", required = false) Double x,
+            @RequestParam(value = "y", required = false) Double y,
             HttpServletRequest request
     ) {
-        System.out.println(address);
-        System.out.println(keywords);
-        System.out.println(order);
-        System.out.println(page);
-        System.out.println(maxDistance);
-        System.out.println(minStar);
+        System.out.println("address: " + address);
+        System.out.println("keywords: " + keywords);
+        System.out.println("order: " + order);
+        System.out.println("page: " + page);
+        System.out.println("maxDistance: " + maxDistance);
+        System.out.println("minStar: " + minStar);
+        System.out.println("x: " + x);
+        System.out.println("y: " + y);
         // 기존 vo 사용
         PlaceVO vo = new PlaceVO();
-        vo.setGuAddress(address);
+        if(x != null && y != null) {
+            vo.setX(x);
+            vo.setY(y);
+        }
 
         // 서비스 호출
         List<PlaceVO> searchedPlaces =
@@ -152,17 +159,19 @@ public class PlaceController {
         vo.setDetailAddress(detailAddress);
         int placeNo = placeService.insertPlace(vo, imgs);
 
-		return ResponseEntity.ok(Map.of("message", "place posting success", "placeNo", placeNo));
+		return ResponseEntity.ok(Map.of("message", "Place-posting Success", "placeNo", placeNo));
 	}
-/*
-	@RequestMapping(value = "/deletePlace")
-	public String deletePlace(PlaceVO vo, HttpSession session) {
-		String id = (String) session.getAttribute("id");
-		if(id==null || !placeService.deletePlace(vo, id))
-			return "redirect:detail?no="+vo.getNo();
-		return "redirect:aroundme"; 
+
+	@DeleteMapping(value = "/place")
+	public ResponseEntity<?> deletePlace(PlaceVO vo, HttpServletRequest req) {
+		String id = (String) req.getAttribute("id");
+		if(id==null)
+			return ResponseEntity.status(Response.SC_UNAUTHORIZED).body(Map.of("message", "로그인이 필요합니다."));
+        else if(!placeService.deletePlace(vo, id))
+            return ResponseEntity.status(Response.SC_BAD_REQUEST).body(Map.of("message", "잘못된 접근입니다."));
+		return ResponseEntity.ok(Map.of("message", "Delete Done"));
 	}
-*/
+
 	@RequestMapping(value = "/image/{image_title:.+}", method = RequestMethod.GET)
 	public ResponseEntity<byte[]> getImageFromS3(@PathVariable String image_title) {
         GetObjectRequest getObjectRequest = GetObjectRequest.builder()
