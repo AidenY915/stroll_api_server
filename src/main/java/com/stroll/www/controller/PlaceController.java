@@ -162,9 +162,11 @@ public class PlaceController {
 		return ResponseEntity.ok(Map.of("message", "Place-posting Success", "placeNo", placeNo));
 	}
 
-	@DeleteMapping(value = "/place")
-	public ResponseEntity<?> deletePlace(PlaceVO vo, HttpServletRequest req) {
-		String id = (String) req.getAttribute("id");
+	@DeleteMapping(value = "/place/{placeNo}")
+	public ResponseEntity<?> deletePlace(@PathVariable("placeNo") int placeNo, HttpServletRequest req) {
+        PlaceVO vo = new PlaceVO();
+        vo.setNo(placeNo);
+		String id = (String) req.getAttribute("auth.userId");
 		if(id==null)
 			return ResponseEntity.status(Response.SC_UNAUTHORIZED).body(Map.of("message", "로그인이 필요합니다."));
         else if(!placeService.deletePlace(vo, id))
