@@ -143,7 +143,7 @@ public class PlaceController {
     }
     @Transactional
 	@PostMapping(value = "/place")
-	public ResponseEntity<?> insertPlace(@RequestParam("imgs") MultipartFile[] imgs,@RequestParam("placeName") String placeName, @RequestParam("address") String address, @RequestParam("detailAddress") String detailAddress, @RequestParam("content") String content, @RequestParam("category") String category, HttpServletRequest req) {
+	public ResponseEntity<?> insertPlace(@RequestParam(value = "imgs", required = false) MultipartFile[] imgs,@RequestParam("placeName") String placeName, @RequestParam("address") String address, @RequestParam("detailAddress") String detailAddress, @RequestParam("content") String content, @RequestParam("category") String category, HttpServletRequest req) {
 		String id = (String)req.getAttribute("auth.userId");
 		if(id == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED) // 401
                 .body(Map.of(
@@ -157,6 +157,7 @@ public class PlaceController {
 		vo.setGuAddress(extractGuAddress(address));
 		vo.setAfterGuAddress(address.replace(vo.getGuAddress(),"").trim());
         vo.setDetailAddress(detailAddress);
+        if(imgs == null) imgs = new MultipartFile[0];
         int placeNo = placeService.insertPlace(vo, imgs);
 
 		return ResponseEntity.ok(Map.of("message", "Place-posting Success", "placeNo", placeNo));
