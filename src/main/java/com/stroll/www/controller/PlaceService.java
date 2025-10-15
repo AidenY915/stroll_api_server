@@ -169,7 +169,7 @@ public class PlaceService {
 		List<ImageVO> imgs = imageDao.selectImgsByPlaceNo(vo.getNo());
 		List<String> rslt = new LinkedList<String>();
 		for (ImageVO img : imgs) {
-			rslt.add(img.getImagePath());
+			rslt.add(img.getImagePath().split("image/")[1]);
 		}
 		return rslt;
 	}

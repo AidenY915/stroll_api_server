@@ -6,8 +6,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.sql.Date;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @NoArgsConstructor
@@ -23,9 +24,11 @@ public class PlaceDetailResponse {
     private double star;
     @Setter
     private boolean isWished;
+    @Setter
+    private List<String> imgs;
 
     public static PlaceDetailResponse from(PlaceVO vo) {
         String address = vo.getGuAddress() + " " + vo.getAfterGuAddress() + " " + vo.getDetailAddress();
-        return new PlaceDetailResponse(vo.getNo(), vo.getTitle(), vo.getContent(), vo.getWrittenDate(),address, vo.getUserId(), vo.getDistance(), vo.getStar(), false);
+        return new PlaceDetailResponse(vo.getNo(), vo.getTitle(), vo.getContent(), vo.getWrittenDate(),address, vo.getUserId(), vo.getDistance(), vo.getStar(), false, new ArrayList<String>());
     }
 }

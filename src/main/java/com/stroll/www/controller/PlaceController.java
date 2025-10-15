@@ -120,7 +120,8 @@ public class PlaceController {
         place = placeService.getPlace(place);
         PlaceDetailResponse placeDetailResponse = PlaceDetailResponse.from(place);
 
-//		List<String> imgs =  placeService.getImgs(place);
+		List<String> imgs =  placeService.getImgs(place);
+        placeDetailResponse.setImgs(imgs);
 
         //찜한 곳인지 표시
 		String id = (String) session.getAttribute("id");
