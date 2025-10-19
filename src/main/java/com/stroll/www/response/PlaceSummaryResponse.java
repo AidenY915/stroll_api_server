@@ -25,7 +25,7 @@ public class PlaceSummaryResponse {
                 vo.getTitle(),
                 vo.getStar(),
                 vo.getDistance(),
-                vo.getGuAddress() + vo.getAfterGuAddress() + vo.getDetailAddress()
+                vo.getGuAddress() + " " + vo.getAfterGuAddress() + " " + vo.getDetailAddress()
         );
     }
 
