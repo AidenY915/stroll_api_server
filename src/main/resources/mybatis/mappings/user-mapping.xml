@@ -70,9 +70,14 @@
 
 	<!-- 사용자가 작성한 장소들 -->
 	<select id="selectUserPlaces" parameterType="user" resultType="place">
-		SELECT * 
-		FROM place 
-		WHERE user_id = #{id}
+        SELECT place.place_no AS no, title, gu_address, after_gu_address, detail_address, x, y, star, category
+        FROM place
+        LEFT OUTER JOIN (
+        SELECT AVG(star) AS star, place_no
+        FROM reply
+        GROUP BY place_no
+        ) AS r ON place.place_no = r.place_no
+		WHERE place.user_id = #{id}
 	</select>
 
 	<!-- 사용자가 작성한 리뷰들 -->
