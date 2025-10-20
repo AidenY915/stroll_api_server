@@ -6,6 +6,7 @@ import org.apache.commons.codec.DecoderException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Base64;
 import java.util.Date;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -21,8 +22,8 @@ public class JwtService {
     private JwtProps jwtProps;
 
     private SecretKey getKey() throws DecoderException {
-        // secret이 Base64라면 이렇게
-        byte[] keyBytes = Hex.decodeHex(jwtProps.getSecret());
+        String secretB64 = jwtProps.getSecret(); // Base64 문자열
+        byte[] keyBytes = Base64.getDecoder().decode(secretB64); // 또는 getUrlDecoder() 참고(아래)
         return Keys.hmacShaKeyFor(keyBytes);
     }
 

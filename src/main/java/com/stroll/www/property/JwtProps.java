@@ -1,5 +1,6 @@
 package com.stroll.www.property;
 
+import jakarta.annotation.PostConstruct;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,4 +17,10 @@ import org.springframework.stereotype.Component;
 public class JwtProps {
     private String secret;
     private Long expiration;
+
+    @PostConstruct
+    void afterBind()
+    {
+        System.out.println("scret: "+ secret);
+    }
 }
