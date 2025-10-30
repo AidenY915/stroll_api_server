@@ -38,6 +38,7 @@ public class AuthFilter extends OncePerRequestFilter {
                 var claims = jwtService.parseClaims(token); // 서명/만료 검증 포함
                 // 성공하면 요청 속성에 심어둠
                 req.setAttribute("auth.userId", claims.getSubject());
+                req.setAttribute("petType", claims.get("petType"));
             } catch (Exception ignore) {
                 // 실패해도 막지 않고 '게스트'로 계속 진행
             }

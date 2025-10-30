@@ -6,7 +6,8 @@ CREATE TABLE user (
 	id CHAR(20) PRIMARY KEY,
 	password CHAR(20) NOT NULL,
 	nickname CHAR(20) NOT NULL UNIQUE,
-	email CHAR(50) NOT NULL
+	email CHAR(50) NOT NULL,
+	pet_type CHAR(20)
 );
 
 DROP TABLE IF EXISTS place;
@@ -22,6 +23,7 @@ CREATE TABLE place (
 	x DOUBLE NOT NULL,
 	y DOUBLE NOT NULL,
 	user_id CHAR(20) NOT NULL,
+    pet_type CHAR(20),
 	CONSTRAINT fk_place_user_id FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE,
 	UNIQUE KEY uq_title_gu_aftergu_detail (title, gu_address, after_gu_address, detail_address)
 );

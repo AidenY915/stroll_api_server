@@ -56,4 +56,6 @@ public class UserDAO {
 	public UserVO selectUserByNickname(UserVO vo) {
 		return mybatis.selectOne("user.selectUserByNickname", vo);
 	}
+
+    public UserVO selectPetType(UserVO vo) {return mybatis.selectOne("user.selectPetType", vo); }
 }

@@ -8,10 +8,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -57,6 +54,8 @@ public class PlaceService {
 
 	public List<PlaceVO> getPlaceList(PlaceVO vo, String keywords, String order, int page, HttpServletRequest request,
 			int maxDistance, int minStar) {
+        String petType = (String)request.getAttribute("petType");
+        vo.setPetType(petType);
 		List<PlaceVO> listFromDb = null;
 		keywords = keywords.replaceAll(" ", "|");
 		if (keywords.equals(""))
@@ -69,10 +68,24 @@ public class PlaceService {
 			vo.setGuAddress(keywords);
 			listFromDb = dao.getPlaceList(vo);
 		} else {
-			String guAddressRegex = vo.getGuAddress().replaceAll("(특별시|광역시|시)", "[가-힣]{0,3}").replaceAll("^[가-힣]+도", "");
+			String guAddressRegex = vo.getGuAddress().replaceAll("(특별시|광역시|시)", "[가-힣]{0,3}").replaceAll("^[가-힣]+도", ""); //!!수정 필!!클라이언트도 카카오이므로 단순히 바꾸면 gu_address만 자르면 됨.
 			vo.setGuAddress(guAddressRegex);
 			listFromDb = dao.getPlaceListByGuAddress(vo);
 		}
+        //petType으로 서버에서 정제 SQL을 수정하지 않았음. 생각해보니 SQL에서 바꿔야 함. ORDER BY 때문
+//        petType = petType == null ? "" : petType;
+//        System.out.println("유저 petType: "+petType);
+//        Iterator<PlaceVO> itr = listFromDb.iterator();
+//        while(itr.hasNext()){
+//            PlaceVO place = itr.next();
+//            String placePetType = place.getPetType();
+//            System.out.println("장소 petType: "+placePetType);
+//            if(placePetType == null || placePetType.equals("기타"))
+//                continue;
+//            if(!placePetType.contains(petType)){
+//                itr.remove();
+//            }
+//        }
 		for (PlaceVO place : listFromDb) {
 			place.setDistance((int) Math.pow(((Math.pow(place.getX() * 1849 - vo.getX() * 1849, 2)
 					+ Math.pow(place.getY() * 110940 - vo.getY() * 110940, 2))), 0.5));

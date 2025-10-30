@@ -73,4 +73,8 @@ public class UserService {
 		}
 		return true;
 	}
+
+    public String getPetType(UserVO vo){
+        return dao.selectPetType(vo).getPetType();
+    }
 }

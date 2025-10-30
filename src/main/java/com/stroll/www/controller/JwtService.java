@@ -27,11 +27,12 @@ public class JwtService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String generateToken(String userId) throws DecoderException {
+    public String generateToken(String userId, String petType) throws DecoderException {
         return Jwts.builder()
                 .subject(userId) // 토큰 주체 (보통 사용자 ID)
                 .issuedAt(new Date()) // 발급 시각
                 .expiration(new Date(System.currentTimeMillis() + jwtProps.getExpiration())) // 만료 시각
+                .claim("petType", petType)
                 .signWith(getKey()) // 서명
                 .compact();
     }

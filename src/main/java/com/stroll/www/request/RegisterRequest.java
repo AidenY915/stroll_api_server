@@ -15,8 +15,9 @@ public class RegisterRequest {
     private String password;
     private String nickname;
     private String email;
+    private String petType;
 
     public UserVO to(){
-        return new UserVO(userId, password, nickname, email);
+        return new UserVO(userId, password, nickname, email, petType);
     }
 }

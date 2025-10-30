@@ -36,8 +36,9 @@ public class AuthController {
         }
         String token = null;
         //JwtService로 토큰 발급
+        String petType = userService.getPetType(userVo);
         try {
-            token = jwtService.generateToken(id);
+            token = jwtService.generateToken(id, petType);
         }catch (DecoderException e){
             e.printStackTrace(); //토큰 발급 실패
             return ResponseEntity

@@ -27,8 +27,8 @@
 
 	<!-- 회원가입 -->
 	<insert id="registerUser" parameterType="user">
-		INSERT INTO user (id, password, nickname, email)
-		VALUES (#{id}, #{password}, #{nickname}, #{email})
+		INSERT INTO user (id, password, nickname, email, animalType)
+		VALUES (#{id}, #{password}, #{nickname}, #{email}, animalType)
 	</insert>
 
 	<!-- 찜 목록 추가 -->
@@ -100,5 +100,10 @@
 		DELETE FROM user 
 		WHERE id = #{id} AND password = #{password}
 	</delete>
+
+    <select id="selectPetType" resultType="user">
+        SELECT pet_type FROM user
+        WHERE id = #{id}
+    </select>
 
 </mapper>
